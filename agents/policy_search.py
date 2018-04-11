@@ -29,7 +29,7 @@ class PolicySearch_Agent():
         state = self.task.reset()
         return state
 
-    def step(self, reward, done):
+    def step(self, action, reward, next_state, done):
         # Save experience / reward
         self.total_reward += reward
         self.count += 1

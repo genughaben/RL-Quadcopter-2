@@ -52,14 +52,14 @@ class PhysicsSim():
         self.reset()
 
     def reset(self):
-        self.time = 0.0
-        self.pose = np.array([0.0, 0.0, 10.0, 0.0, 0.0, 0.0]) if self.init_pose is None else self.init_pose
-        self.v = np.array([0.0, 0.0, 0.0]) if self.init_velocities is None else self.init_velocities
-        self.angular_v = np.array([0.0, 0.0, 0.0]) if self.init_angle_velocities is None else self.init_angle_velocities
-        self.linear_accel = np.array([0.0, 0.0, 0.0])
-        self.angular_accels = np.array([0.0, 0.0, 0.0])
-        self.prop_wind_speed = np.array([0., 0., 0., 0.])
-        self.done = False
+       self.time = 0.0
+       self.pose = np.array([0.0, 0.0, 10.0, 0.0, 0.0, 0.0]) if self.init_pose is None else np.copy(self.init_pose)
+       self.v = np.array([0.0, 0.0, 0.0]) if self.init_velocities is None else np.copy(self.init_velocities)
+       self.angular_v = np.array([0.0, 0.0, 0.0]) if self.init_angle_velocities is None else np.copy(self.init_angle_velocities)
+       self.linear_accel = np.array([0.0, 0.0, 0.0])
+       self.angular_accels = np.array([0.0, 0.0, 0.0])
+       self.prop_wind_speed = np.array([0., 0., 0., 0.])
+       self.done = False
 
     def find_body_velocity(self):
         body_velocity = np.matmul(earth_to_body_frame(*list(self.pose[3:])), self.v)
