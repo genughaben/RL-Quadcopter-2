@@ -1,4 +1,4 @@
-from keras import layers, models, optimizers
+from keras import layers, models, optimizers, regularizers
 from keras import backend as K
 import numpy as np
 from agents.ddpg_critic import Critic
@@ -8,18 +8,12 @@ from agents.ounoise import OUNoise
 
 class DDPG():
     """Reinforcement Learning agent that learns using DDPG."""
-    def __init__(self, task, gym=False):
+    def __init__(self, task, params):
         self.task = task
-        if gym:
-            self.state_size = np.prod(task.observation_space.shape)
-            self.action_size = np.prod(task.action_space.shape)
-            self.action_low = task.action_space.low
-            self.action_high = task.action_space.high
-        else:
-            self.state_size = task.state_size
-            self.action_size = task.action_size
-            self.action_low = task.action_low
-            self.action_high = task.action_high
+        self.state_size = task.state_size
+        self.action_size = task.action_size
+        self.action_low = task.action_low
+        self.action_high = task.action_high
 
         # Actor (Policy) Model
         self.actor_local = Actor(self.state_size, self.action_size, self.action_low, self.action_high)
@@ -35,33 +29,36 @@ class DDPG():
 
         # Noise process
         self.exploration_mu = 0
-        self.exploration_theta = 0.15
-        self.exploration_sigma = 0.2
+        self.exploration_theta = 0.15 # same direction
+        self.exploration_sigma = 0.001 # random noise
+        if(params.get("sigma")):
+            self.exploration_sigma = params.get("sigma")
+
+        #self.exploration_mu = 0
+        #self.exploration_theta = 0.15
+        #self.exploration_sigma = 0.2
         self.noise = OUNoise(self.action_size, self.exploration_mu, self.exploration_theta, self.exploration_sigma)
 
         # Replay memory
         self.buffer_size = 100000
-        self.batch_size = 64
+        self.batch_size = 128
         self.memory = ReplayBuffer(self.buffer_size, self.batch_size)
 
         # Algorithm parameters
         self.gamma = 0.99  # discount factor
-        self.tau = 0.01  # for soft update of target parameters
+        self.tau = 0.1  # for soft update of target parameters
+        #self.gamma = 0.9
+        #self.tau = 0.05
 
-        self.score = 0.0
+        # Statistics
         self.best_score = -np.inf
-
-        self.reset_episode()
-
+        self.score = 0
 
     def reset_episode(self):
         self.noise.reset()
         state = self.task.reset()
         self.last_state = state
-
-        self.total_reward = 0.0
-        self.count = 0
-
+        self.score = 0
         return state
 
     def step(self, action, reward, next_state, done):
@@ -73,19 +70,18 @@ class DDPG():
             experiences = self.memory.sample()
             self.learn(experiences)
 
-        self.total_reward += reward
-        self.count += 1
         # Roll over last state and action
         self.last_state = next_state
 
+        # stats
+        self.score += reward
         if done:
-            self.score = self.total_reward / self.count
             if self.score > self.best_score:
                 self.best_score = self.score
 
-    def act(self, state):
+    def act(self, states):
         """Returns actions for given state(s) as per current policy."""
-        state = np.reshape(state, [-1, self.state_size])
+        state = np.reshape(states, [-1, self.state_size])
         action = self.actor_local.model.predict(state)[0]
         return list(action + self.noise.sample())  # add some noise for exploration
 

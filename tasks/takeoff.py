@@ -21,35 +21,58 @@ class Takeoff(Task):
         self.z_distance = abs(self.target_pos[2] - self.sim.lower_bounds[2])
         self.runtime = runtime
 
+
     def get_reward(self):
         """Uses current pose of sim to return reward."""
-        # max reward = 1
-        # min reward = - inf
-        rel_current_runtime = self.sim.time / self.runtime # [0,1]
-        rel_remaining_runtime = 1. - rel_current_runtime # [1,0]
-        rel_remaining_distance = abs(self.sim.pose[2] - self.target_pos[2]) / self.z_distance #[0,1]
-
-        # EXAMPLES
-        # begin: cur_time 0, remain_time: 1. distance: 0.9 reward: 0.1 * 100 - 0*100 = -
-        #
-        #
-
         reward = 0
-        # distance component
-        reward += 20 * (1. - rel_remaining_distance)
-        # time component
-        reward += 10 * rel_current_runtime
-        # bonus for reaching the target
-        if(self.sim.pose[2] >= self.target_pos[2]):
-             reward += 5 * (1 - rel_remaining_distance)
-             done = True
-        # malus for not reaching the target
-        elif(self.sim.time >= self.sim.runtime):
-             reward -= 5 * (1 + rel_remaining_distance)
-             done = True
-        if(self.reward_func):
-            reward = self.reward_func(self.sim.pose[:3], self.target_pos)
-        return reward
+        penalty = 0
+        current_position = self.sim.pose[:3]
+        # penalty for euler angles, we want the takeoff to be stable
+        penalty += abs(self.sim.pose[3:6]).sum()
+        # penalty for distance from target
+        penalty += abs(current_position[0]-self.target_pos[0])**2
+        penalty += abs(current_position[1]-self.target_pos[1])**2
+        penalty += 10*abs(current_position[2]-self.target_pos[2])**2
+
+        # link velocity to residual distance
+        penalty += abs(abs(current_position-self.target_pos).sum() - abs(self.sim.v).sum())
+
+        distance = np.sqrt((current_position[0]-self.target_pos[0])**2 + (current_position[1]-self.target_pos[1])**2 + (current_position[2]-self.target_pos[2])**2)
+        # extra reward for flying near the target
+        if distance < 10:
+            reward += 1000
+        # constant reward for flying
+        reward += 100
+        return reward - penalty*0.0002
+    # def get_reward(self):
+    #     """Uses current pose of sim to return reward."""
+    #     # max reward = 1
+    #     # min reward = - inf
+    #     rel_current_runtime = self.sim.time / self.runtime # [0,1]
+    #     rel_remaining_runtime = 1. - rel_current_runtime # [1,0]
+    #     rel_remaining_distance = abs(self.sim.pose[2] - self.target_pos[2]) / self.z_distance #[0,1]
+    #
+    #     # EXAMPLES
+    #     # begin: cur_time 0, remain_time: 1. distance: 0.9 reward: 0.1 * 100 - 0*100 = -
+    #     #
+    #     #
+    #
+    #     reward = 0
+    #     # distance component
+    #     reward += 20 * (1. - rel_remaining_distance)
+    #     # time component
+    #     reward += 10 * rel_current_runtime
+    #     # bonus for reaching the target
+    #     if(self.sim.pose[2] >= self.target_pos[2]):
+    #          reward += 5 * (1 - rel_remaining_distance)
+    #          done = True
+    #     # malus for not reaching the target
+    #     elif(self.sim.time >= self.sim.runtime):
+    #          reward -= 5 * (1 + rel_remaining_distance)
+    #          done = True
+    #     if(self.reward_func):
+    #         reward = self.reward_func(self.sim.pose[:3], self.target_pos)
+    #     return reward
 
         def original_reward():
             reward = 1.-.3*(abs(self.sim.pose[:3] - self.target_pos)).sum()

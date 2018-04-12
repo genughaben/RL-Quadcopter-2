@@ -1,4 +1,4 @@
-from keras import layers, models, optimizers
+from keras import layers, models, optimizers, regularizers
 from keras import backend as K
 import numpy as np
 
@@ -7,7 +7,6 @@ class Actor:
 
     def __init__(self, state_size, action_size, action_low, action_high):
         """Initialize parameters and build model.
-
         Params
         ======
             state_size (int): Dimension of each state
@@ -20,7 +19,6 @@ class Actor:
         self.action_low = action_low
         self.action_high = action_high
         self.action_range = self.action_high - self.action_low
-        self.dropout_rate = 0.2
 
         # Initialize any other variables here
 
@@ -32,14 +30,13 @@ class Actor:
         states = layers.Input(shape=(self.state_size,), name='states')
 
         # Add hidden layers
-        net = layers.Dense(units=32, init='uniform', kernel_regularizer=regularizers.l2(0.01))(states)
-        net = layers.BatchNormalization()(net)
-        net = layers.Activation('relu')(net)
-        net = layers.Dropout(self.dropout_rate)(net)
-        net = layers.Dense(units=64, init='uniform', kernel_regularizer=regularizers.l2(0.01))(net)
-        net = layers.BatchNormalization()(net)
-        net = layers.Activation('relu')(net)
-        net = layers.Dropout(self.dropout_rate)(net)
+        size_multiplicator = 1
+        net = layers.Dense(units=size_multiplicator*32, activation='relu')(states)
+        # net = layers.BatchNormalization()(net)
+        net = layers.Dense(units=size_multiplicator*64, activation='relu')(net)
+        # net = layers.BatchNormalization()(net)
+        net = layers.Dense(units=size_multiplicator*32, activation='relu')(net)
+        # net = layers.BatchNormalization()(net)
 
         # Try different layer sizes, activations, add batch normalization, regularizers, etc.
 
@@ -61,7 +58,7 @@ class Actor:
         # Incorporate any additional losses here (e.g. from regularizers)
 
         # Define optimizer and training function
-        optimizer = optimizers.Adam(lr=0.00001)
+        optimizer = optimizers.Adam()
         updates_op = optimizer.get_updates(params=self.model.trainable_weights, loss=loss)
         self.train_fn = K.function(
             inputs=[self.model.input, action_gradients, K.learning_phase()],
