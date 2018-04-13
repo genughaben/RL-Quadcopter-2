@@ -45,27 +45,27 @@ class Task():
         penalties += remain_x_distance**2
         penalties += remain_y_distance**2
         penalties += 5 * remain_distance**2 # possibly remove or change to 2
-        penalties += 10 * remain_z_distance**2 # possibly change to 5
+        penalties += 2 * remain_z_distance**2 # possibly change to 5
         # penalty for euler angles
         penalties += abs(self.sim.pose[3:6]).sum()
 
         # penalty for velocity
         penalties += max(remain_x_distance + self.sim.v[0],0)
         penalties += max(remain_y_distance + self.sim.v[1],0)
-        penalties += 5 * max(remain_z_distance + self.sim.v[2],0) # change to 5
+        penalties += 2 * max(remain_z_distance + self.sim.v[2],0) # change to 5
 
         # # angular velocity
         penalties += max(self.sim.pose[3] + self.sim.angular_v[0],0)
         penalties += max(self.sim.pose[4] + self.sim.angular_v[1],0)
-        penalties += 5 * max(self.sim.pose[5] + self.sim.angular_v[2],0) # change to 5
+        penalties += 2 * max(self.sim.pose[5] + self.sim.angular_v[2],0) # change to 5
 
         penalties = penalties*0.0005
         self.penalties = penalties
         reward += 100
-        # if remain_distance < 10:
-        #     reward += 10
-        # if self.sim.time >= self.runtime and remain_distance < 10:
-        #     reward +=100
+        if remain_distance < 10:
+            reward += 10
+        if self.sim.time >= self.runtime and remain_distance < 10:
+            reward +=100
 
         reward = reward - penalties
         self.reward = reward

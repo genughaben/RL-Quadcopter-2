@@ -30,7 +30,7 @@ class DDPG():
         # Noise process
         self.exploration_mu = 0
         self.exploration_theta = 0.15 # same direction
-        self.exploration_sigma = 0.0001 # random noise
+        self.exploration_sigma = 0.0005 # random noise
         if(params.get("sigma")):
             self.exploration_sigma = params.get("sigma")
 

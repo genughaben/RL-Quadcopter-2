@@ -19,7 +19,7 @@ class Actor:
         self.action_low = action_low
         self.action_high = action_high
         self.action_range = self.action_high - self.action_low
-
+        self.dropout_rate = 0.2
         # Initialize any other variables here
 
         self.build_model()
@@ -30,12 +30,15 @@ class Actor:
         states = layers.Input(shape=(self.state_size,), name='states')
 
         # Add hidden layers
-        size_multiplicator = 2
+        size_multiplicator = 1
         net = layers.Dense(units=size_multiplicator*32, activation='relu', kernel_regularizer=regularizers.l2(0.01))(states)
+        net = layers.Dropout(self.dropout_rate)(net)
         # net = layers.BatchNormalization()(net)
         net = layers.Dense(units=size_multiplicator*64, activation='relu', kernel_regularizer=regularizers.l2(0.01))(net)
+        net = layers.Dropout(self.dropout_rate)(net)
         # net = layers.BatchNormalization()(net)
         net = layers.Dense(units=size_multiplicator*32, activation='relu', kernel_regularizer=regularizers.l2(0.01))(net)
+        net = layers.Dropout(self.dropout_rate)(net)
         # net = layers.BatchNormalization()(net)
 
         # Try different layer sizes, activations, add batch normalization, regularizers, etc.

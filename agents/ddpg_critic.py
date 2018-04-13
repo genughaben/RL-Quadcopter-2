@@ -14,7 +14,7 @@ class Critic:
         """
         self.state_size = state_size
         self.action_size = action_size
-
+        self.dropout_rate = 0.2
         # Initialize any other variables here
 
         self.build_model()
@@ -26,16 +26,20 @@ class Critic:
         actions = layers.Input(shape=(self.action_size,), name='actions')
 
         # Add hidden layer(s) for state pathway
-        size_multiplicator = 2
+        size_multiplicator = 1
         net_states = layers.Dense(units=size_multiplicator*32, activation='relu', kernel_regularizer=regularizers.l2(0.01))(states)
+        net_states = layers.Dropout(self.dropout_rate)(net_states)
         # net_states = layers.BatchNormalization()(net_states)
         net_states = layers.Dense(units=size_multiplicator*64, activation='relu', kernel_regularizer=regularizers.l2(0.01))(net_states)
+        net_states = layers.Dropout(self.dropout_rate)(net_states)
         # net_states = layers.BatchNormalization()(net_states)
 
         # Add hidden layer(s) for action pathway
         net_actions = layers.Dense(units=size_multiplicator*32, activation='relu', kernel_regularizer=regularizers.l2(0.01))(actions)
+        net_actions = layers.Dropout(self.dropout_rate)(net_actions)
         # net_actions = layers.BatchNormalization()(net_actions)
         net_actions = layers.Dense(units=size_multiplicator*64, activation='relu', kernel_regularizer=regularizers.l2(0.01))(net_actions)
+        net_actions = layers.Dropout(self.dropout_rate)(net_actions)
         # net_actions = layers.BatchNormalization()(net_actions)
 
         # Try different layer sizes, activations, add batch normalization, regularizers, etc.
