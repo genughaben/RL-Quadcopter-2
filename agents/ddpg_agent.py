@@ -8,7 +8,7 @@ from agents.ounoise import OUNoise
 
 class DDPG():
     """Reinforcement Learning agent that learns using DDPG."""
-    def __init__(self, task, params):
+    def __init__(self, task, params={}):
         self.task = task
         self.state_size = task.state_size
         self.action_size = task.action_size
@@ -30,7 +30,7 @@ class DDPG():
         # Noise process
         self.exploration_mu = 0
         self.exploration_theta = 0.15 # same direction
-        self.exploration_sigma = 0.001 # random noise
+        self.exploration_sigma = 0.0001 # random noise
         if(params.get("sigma")):
             self.exploration_sigma = params.get("sigma")
 
