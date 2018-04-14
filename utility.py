@@ -123,7 +123,7 @@ def plt_dynamic(fig1, fig2, x, y1, sub1, y2, sub2, color_y1='g', color_y2='b'):
     fig1.canvas.draw()
     fig2.canvas.draw()
 
-def createPlot(num_episodes, y_lims_reward):
+def createPlot(num_episodes, y_lims_reward=[-1000.,1000.]):
 # fig and sub1, sub2
     fig1, sub1 = plt.subplots(1,1)
     fig2, sub2 = plt.subplots(1,1)
@@ -191,6 +191,9 @@ def train(agent, task, num_episodes, display_every=1, display_graphs=True, y_lim
                         round(task.sim.pose[:3][0],2),round(task.sim.pose[:3][1],2),round(task.sim.pose[:3][2],2),
                         round(task.sim.v[0],2),round(task.sim.v[1],2),round(task.sim.v[2],2)),
                         end="")  # [debug]
+                    if(  task.penalties_obj ):
+                        penalty_string = "  ".join([k+": "+str(v) for k,v in task.penalties_obj.items()])
+                        print("\n", penalty_string)
                 if (i_episode % display_every == 0):
                     xs.append(i_episode)
                     ys1.append(agent.score)
@@ -211,3 +214,44 @@ def evaluate_episode(agent, scores, task_name):
     plot_z_n_reward(results)
     plot_run(results)
     print_3d_trajectory(results)
+
+
+# def train_with_adaptive_noise():
+# # Scores for plotting
+# scores = []
+# display_every = 10
+
+# for i_episode in range(1, num_episodes+1):
+#     state = hovering_agent.reset_episode() # start a new episode
+#     last_score = 0 # for dynamic noise adjustment
+#     while True:
+#         action = hovering_agent.act(state)
+#         next_state, reward, done = task.step(action)
+#         hovering_agent.step(action, reward, next_state, done)
+#         state = next_state
+#         if done:
+#             scores.append(hovering_agent.score)
+#             if(i_episode % display_every == 0):
+#                 print(
+#                     "\r\nEpi={:4d}, score={:7.3f}, (best={:7.3f}), reward={}, penalty={}, pos={} {} {}, v={} {} {}".format(
+#                     i_episode,
+#                     hovering_agent.score, hovering_agent.best_score,
+#                     round(task.reward,2),round(task.penalties,2),
+#                     round(task.sim.pose[:3][0],2),round(task.sim.pose[:3][1],2),round(task.sim.pose[:3][2],2),
+#                     round(task.sim.v[0],2),round(task.sim.v[1],2),round(task.sim.v[2],2)),
+#                     end="")  # [debug]
+#                 sys.stdout.flush()
+#                 score_abs = abs(last_score - hovering_agent.score)
+# #                 print(hovering_agent.score)
+# #                 print(last_score)
+#                 if(score_abs < 0.005*last_score):
+#                     hovering_agent.noise.sigma *=3.33
+#                     change = "up"
+#                     if(hovering_agent.noise.sigma > 1.):
+#                         change = "down"
+#                         hovering_agent.noise.sigma /=3.33
+#                     print("'\nchange", change, score_abs, "<", last_score*0.005)
+#                 else:
+#                     hovering_agent.noise.sigma = 0.0001
+#             break
+#     sys.stdout.flush()

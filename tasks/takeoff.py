@@ -73,34 +73,42 @@ class Takeoff(Task):
         reward = reward - penalties
         self.reward = reward
         return reward
-
-    def original_reward():
-        reward = 1.-.3*(abs(self.sim.pose[:3] - self.target_pos)).sum()
-        return reward
-
-    def reward_emphasize_z(sim_pose, target_pose):
-        reward = 0
-        x_diviation = abs(sim_pose[0] - target_pose[0])
-        y_diviation = abs(sim_pose[1] - target_pose[1])
-        z_diviation = abs(sim_pose[2] - target_pose[2])
-        basic_reward = 1.
-        reward = basic_reward - 0.9*z_diviation
-        reward = reward - 0.05*x_diviation
-        reward = reward - 0.05*y_diviation
-        return reward
-
-    def get_reward_with_orientation():
-        #add small bias to allow for small euler angles
-       euler_bias = 10
-       Eulers_angle_penalty = abs(self.sim.pose[3:] - self.target_pos[3:]).sum() - euler_bias
-
-       # Reward based on how close we are to our designated coordinate z. This should be our main objective
-       z_reward = abs(self.sim.pose[2] - self.target_pos[2])
-
-       # Reward agent for minimaly straying or not moving from x,y axis (more stable take off)
-       other_reward = abs(self.sim.pose[:2] - self.target_pos[:2]).sum()
-
-       penalties = (-.0003*(other_reward) - .0009*(z_reward) - .0003*(Eulers_angle_penalty))/3
-
-       reward =   1 + penalties # penalties should be a negative number  # add 1 for every second flying
-       return reward
+    #
+    # def get_reward_test(self):
+    #     """Uses current pose of sim to return reward."""
+    #
+    #     remain_distance = np.sqrt( ((self.sim.pose[:3]-self.target_pos)**2).sum() )
+    #     remain_x_distance = abs(self.sim.pose[0] - self.target_pos[0])
+    #     remain_y_distance = abs(self.sim.pose[1] - self.target_pos[1])
+    #     remain_z_distance = abs(self.sim.pose[2] - self.target_pos[2]) #[1,0] ; 1 if distance is maximal; 0 if target is arrived at
+    #
+    #     reward = 0
+    #     penalties = 0
+    #     penalties += remain_x_distance**2
+    #     penalties += remain_y_distance**2
+    #     penalties += 5 * remain_distance**2 # possibly remove or change to 2
+    #     penalties += 2 * remain_z_distance**2 # possibly change to 5
+    #     # penalty for euler angles
+    #     penalties += abs(self.sim.pose[3:6]).sum()
+    #
+    #     # penalty for velocity
+    #     penalties += max(remain_x_distance + self.sim.v[0],0)
+    #     penalties += max(remain_y_distance + self.sim.v[1],0)
+    #     penalties += 2 * max(remain_z_distance + self.sim.v[2],0) # change to 5
+    #
+    #     # # angular velocity
+    #     penalties += max(self.sim.pose[3] + self.sim.angular_v[0],0)
+    #     penalties += max(self.sim.pose[4] + self.sim.angular_v[1],0)
+    #     penalties += 2 * max(self.sim.pose[5] + self.sim.angular_v[2],0) # change to 5
+    #
+    #     penalties = penalties*0.0005
+    #     self.penalties = penalties
+    #     reward += 100
+    #     if remain_distance < 10:
+    #         reward += 10
+    #     if self.sim.time >= self.runtime and remain_distance < 10:
+    #         reward +=100
+    #
+    #     reward = reward - penalties
+    #     self.reward = reward
+    #     return reward

@@ -12,7 +12,7 @@ class Basic_Agent():
         state = self.task.reset()
         return state
 
-    def step(self, reward, done):
+    def step(self,  action, reward, next_state, done):
         pass
 
 class Trivial_Takeoff_Agent():
