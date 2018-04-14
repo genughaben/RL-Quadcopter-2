@@ -14,7 +14,7 @@ class Critic:
         """
         self.state_size = state_size
         self.action_size = action_size
-        self.dropout_rate = 0.2
+        self.dropout_rate = 0.4
         # Initialize any other variables here
 
         self.build_model()
@@ -26,32 +26,39 @@ class Critic:
         actions = layers.Input(shape=(self.action_size,), name='actions')
 
         # Add hidden layer(s) for state pathway
-        size_multiplicator = 1
-        net_states = layers.Dense(units=size_multiplicator*32, activation='relu', kernel_regularizer=regularizers.l2(0.01))(states)
+        size_multiplicator = 2
+        size_multiplicator_merge = 1
+        net_states = layers.Dense(units=size_multiplicator*16, kernel_initializer='uniform', activation='relu', kernel_regularizer=regularizers.l2(0.01))(states)
         net_states = layers.Dropout(self.dropout_rate)(net_states)
-        # net_states = layers.BatchNormalization()(net_states)
-        net_states = layers.Dense(units=size_multiplicator*64, activation='relu', kernel_regularizer=regularizers.l2(0.01))(net_states)
+        net_states = layers.BatchNormalization()(net_states)
+        net_states = layers.Dense(units=size_multiplicator*32, kernel_initializer='uniform', activation='relu', kernel_regularizer=regularizers.l2(0.01))(net_states)
         net_states = layers.Dropout(self.dropout_rate)(net_states)
-        # net_states = layers.BatchNormalization()(net_states)
+        net_states = layers.BatchNormalization()(net_states)
 
         # Add hidden layer(s) for action pathway
-        net_actions = layers.Dense(units=size_multiplicator*32, activation='relu', kernel_regularizer=regularizers.l2(0.01))(actions)
+        net_actions = layers.Dense(units=size_multiplicator*16, kernel_initializer='uniform', activation='relu', kernel_regularizer=regularizers.l2(0.01))(actions)
         net_actions = layers.Dropout(self.dropout_rate)(net_actions)
-        # net_actions = layers.BatchNormalization()(net_actions)
-        net_actions = layers.Dense(units=size_multiplicator*64, activation='relu', kernel_regularizer=regularizers.l2(0.01))(net_actions)
+        net_actions = layers.BatchNormalization()(net_actions)
+        net_actions = layers.Dense(units=size_multiplicator*32, kernel_initializer='uniform', activation='relu', kernel_regularizer=regularizers.l2(0.01))(net_actions)
         net_actions = layers.Dropout(self.dropout_rate)(net_actions)
-        # net_actions = layers.BatchNormalization()(net_actions)
+        net_actions = layers.BatchNormalization()(net_actions)
 
         # Try different layer sizes, activations, add batch normalization, regularizers, etc.
 
         # Combine state and action pathways
         net = layers.Add()([net_states, net_actions])
         net = layers.Activation('relu')(net)
+        # net = layers.Dense(units=size_multiplicator_merge*8, kernel_initializer='random_uniform', activation='relu', kernel_regularizer=regularizers.l2(0.01))(net)
+        # net = layers.Dropout(self.dropout_rate)(net)
+        # net = layers.Dense(units=size_multiplicator_merge*4, kernel_initializer='random_uniform', activation='relu', kernel_regularizer=regularizers.l2(0.01))(net)
+        # net = layers.Dropout(self.dropout_rate)(net)
+        # net = layers.Dense(units=size_multiplicator*32, kernel_initializer='random_uniform', activation='relu', kernel_regularizer=regularizers.l2(0.01))(net)
+        # net = layers.Dropout(self.dropout_rate)(net)
 
         # Add more layers to the combined network if needed
 
         # Add final output layer to prduce action values (Q values)
-        Q_values = layers.Dense(units=1, name='q_values')(net)
+        Q_values = layers.Dense(units=1, name='q_values', kernel_initializer='random_uniform')(net)
 
         # Create Keras model
         self.model = models.Model(inputs=[states, actions], outputs=Q_values)

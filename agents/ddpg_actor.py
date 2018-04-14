@@ -31,21 +31,21 @@ class Actor:
 
         # Add hidden layers
         size_multiplicator = 1
-        net = layers.Dense(units=size_multiplicator*32, activation='relu', kernel_regularizer=regularizers.l2(0.01))(states)
+        net = layers.Dense(units=size_multiplicator*16, kernel_initializer='uniform', activation='relu', kernel_regularizer=regularizers.l2(0.01))(states)
         net = layers.Dropout(self.dropout_rate)(net)
-        # net = layers.BatchNormalization()(net)
-        net = layers.Dense(units=size_multiplicator*64, activation='relu', kernel_regularizer=regularizers.l2(0.01))(net)
+        net = layers.BatchNormalization()(net)
+        net = layers.Dense(units=size_multiplicator*32, kernel_initializer='uniform', activation='relu', kernel_regularizer=regularizers.l2(0.01))(net)
         net = layers.Dropout(self.dropout_rate)(net)
-        # net = layers.BatchNormalization()(net)
-        net = layers.Dense(units=size_multiplicator*32, activation='relu', kernel_regularizer=regularizers.l2(0.01))(net)
+        net = layers.BatchNormalization()(net)
+        net = layers.Dense(units=size_multiplicator*16, kernel_initializer='uniform', activation='relu', kernel_regularizer=regularizers.l2(0.01))(net)
         net = layers.Dropout(self.dropout_rate)(net)
-        # net = layers.BatchNormalization()(net)
+        net = layers.BatchNormalization()(net)
 
         # Try different layer sizes, activations, add batch normalization, regularizers, etc.
 
         # Add final output layer with sigmoid activation
         raw_actions = layers.Dense(units=self.action_size, activation='sigmoid',
-            name='raw_actions')(net)
+            name='raw_actions', kernel_initializer='random_uniform', )(net)
 
         # Scale [0, 1] output for each action dimension to proper range
         actions = layers.Lambda(lambda x: (x * self.action_range) + self.action_low,

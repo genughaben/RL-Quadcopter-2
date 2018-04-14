@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import csv
-
+import sys
 
 def log_run(agent, file_name, given_labels = None):
     if(given_labels):
@@ -123,7 +123,7 @@ def plt_dynamic(fig1, fig2, x, y1, sub1, y2, sub2, color_y1='g', color_y2='b'):
     fig1.canvas.draw()
     fig2.canvas.draw()
 
-def createPlot(num_episodes):
+def createPlot(num_episodes, y_lims_reward):
 # fig and sub1, sub2
     fig1, sub1 = plt.subplots(1,1)
     fig2, sub2 = plt.subplots(1,1)
@@ -140,9 +140,74 @@ def createPlot(num_episodes):
 
     #boundaries
     sub1.set_xlim(1,num_episodes)
-    sub1.set_ylim(-0.0, 50.0)
+    sub1.set_ylim(y_lims_reward[0], y_lims_reward[1])
     sub2.set_xlim(1, num_episodes)
-    sub2.set_ylim(0.0, 200.0)
+    sub2.set_ylim(0.0, 300.0)
 
     plt.legend()
     return fig1, fig2, sub1, sub2
+
+def print_3d_trajectory(results):
+    import matplotlib as mpl
+    from mpl_toolkits.mplot3d import Axes3D
+    import numpy as np
+    import matplotlib.pyplot as plt
+
+    mpl.rcParams['legend.fontsize'] = 10
+
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+    x = results['x']
+    y = results['y']
+    z = results['z']
+    ax.plot(x, y, z, label='flight curve')
+    ax.legend()
+
+    plt.show()
+
+def train(agent, task, num_episodes, display_every=1, display_graphs=True, y_lims_reward=[100,100]):
+    scores, xs, ys1, ys2 = [], [], [], []
+
+    if(display_graphs):
+        fig1, fig2, sub1, sub2 = createPlot(num_episodes, y_lims_reward)
+
+    print("Number of episodes: ", num_episodes)
+    for i_episode in range(1, num_episodes+1):
+        state = agent.reset_episode() # start a new episode
+        while True:
+            action = agent.act(state)
+            next_state, reward, done = task.step(action)
+            agent.step(action, reward, next_state, done)
+            state = next_state
+            if done:
+                scores.append(agent.score)
+                if(i_episode % display_every == 0):
+                    sys.stdout.flush()
+                    print(
+                        "\r\nEpi={:4d}, score={:7.3f}, (best={:7.3f}), reward={}, penalty={}, pos={} {} {}, v={} {} {}".format(
+                        i_episode,
+                        agent.score, agent.best_score,
+                        round(task.reward,2),round(task.penalties,2),
+                        round(task.sim.pose[:3][0],2),round(task.sim.pose[:3][1],2),round(task.sim.pose[:3][2],2),
+                        round(task.sim.v[0],2),round(task.sim.v[1],2),round(task.sim.v[2],2)),
+                        end="")  # [debug]
+                if (i_episode % display_every == 0):
+                    xs.append(i_episode)
+                    ys1.append(agent.score)
+                    ys2.append(task.sim.pose[2])
+                    sys.stdout.flush()
+                    plt_dynamic(fig1, fig2, xs, ys1, sub1, ys2, sub2) if display_graphs else 0
+                break
+    return scores, xs, ys1, ys2
+
+def evaluate_episode(agent, scores, task_name):
+    file_name = "ddpg_" + task_name + "_data_episode.txt"
+    done = False
+    label = "rewards_" + task_name
+
+    plt.plot(scores, label=label)
+    plt.show()
+    results = log_run(agent, file_name)
+    plot_z_n_reward(results)
+    plot_run(results)
+    print_3d_trajectory(results)
