@@ -56,9 +56,11 @@ class Takeoff(Task):
         self.penalties_obj['euler'] = round(euler_penalty,2)
 
         # distance to velocity relationship
-        velo_x_penalty = abs(abs(residual_distances[0]) - abs(self.sim.v[0]))
-        velo_y_penalty = abs(abs(residual_distances[1]) - abs(self.sim.v[1]))
-        velo_z_penalty = abs(abs(residual_distances[2]) - abs(self.sim.v[2]))
+        velo_x_penalty = self.sim.v[0]**2
+        velo_y_penalty = self.sim.v[1]**2
+        # velo_x_penalty += abs(abs(residual_distances[0]) + abs(self.sim.v[0]))
+        # velo_y_penalty += abs(abs(residual_distances[1]) + abs(self.sim.v[1]))
+        velo_z_penalty = abs(residual_distances[2] + self.sim.v[2])**2
         self.penalties_obj['v_x'] = round(velo_x_penalty, 2)
         self.penalties_obj['v_y'] = round(velo_y_penalty, 2)
         self.penalties_obj['v_z'] = round(velo_z_penalty, 2)
@@ -72,16 +74,16 @@ class Takeoff(Task):
         self.penalties_obj['av_p'] = av_psi_penalties
 
         # factoring individual penalties
-        pos_penalties = pos_x_penalty + pos_y_penalty + 4 * pos_z_penalty
-        velo_penalties = velo_x_penalty + velo_y_penalty + 10 * velo_z_penalty
-        angular_v_penalties = av_phi_penalties + av_theta_penalties + 10 * av_psi_penalties
+        pos_penalties = pos_x_penalty + pos_y_penalty + 10 * pos_z_penalty
+        velo_penalties = velo_x_penalty + velo_y_penalty + velo_z_penalty
+        angular_v_penalties = av_phi_penalties + av_theta_penalties + av_psi_penalties
         self.penalties_obj['pos'] = round(pos_penalties,2)
         self.penalties_obj['velo'] = round(velo_penalties,2)
         self.penalties_obj['av_all'] = round(angular_v_penalties,2)
 
         # adding penalties
         penalties += pos_penalties
-        penalties += 10 * euler_penalty
+        penalties += 100 * euler_penalty
         penalties += velo_penalties
         penalties += angular_v_penalties
 
@@ -89,16 +91,16 @@ class Takeoff(Task):
         distance = np.sqrt( (residual_distances**2).sum())
         if(self.sim.pose[2] >= self.target_pos[2]):
             # extra reward for flying near the target
-            reward += 5
+            reward += 100
             penalties += pos_z_penalty * 2
             if distance < 5.:
-                reward += 5
+                reward += 100
 
         self.penalties_obj['all'] = round(penalties,2)
 
         #summary calculation
         reward += 100 # base reward
-        factored_penalties = penalties*0.005 # factoring penalties
+        factored_penalties = penalties*0.0005 # factoring penalties
         reward = reward - factored_penalties
         self.penalties = factored_penalties
         self.reward = reward

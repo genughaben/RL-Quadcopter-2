@@ -63,14 +63,6 @@ class Landing(Task):
         self.penalties_obj['v_y'] = round(velo_y_penalty, 2)
         self.penalties_obj['v_z'] = round(velo_z_penalty, 2)
 
-        # #anguar velocity
-        # av_phi_penalties = abs(self.sim.angular_v[0])**2
-        # av_theta_penalties = abs(self.sim.angular_v[1])**2
-        # av_psi_penalties = abs(self.sim.angular_v[2])**2 # change to 5
-        # self.penalties_obj['av_p'] = av_phi_penalties
-        # self.penalties_obj['av_t'] = av_theta_penalties
-        # self.penalties_obj['av_p'] = av_psi_penalties
-
         # factoring individual penalties
         velo_penalties = velo_x_penalty + velo_y_penalty + velo_z_penalty
         pos_penalties = pos_xy_penalty + 10 * pos_z_penalty
@@ -89,14 +81,14 @@ class Landing(Task):
         distance = np.sqrt( (residual_distances**2).sum())
         if(distance < self.base_distance * 0.2):
             # extra reward for flying near the target
-            reward += base_reward**2
-            penalties += round(abs(velo_z_penalty) * 2, 2)
+            # reward += base_reward**2
+            penalties += round(abs(velo_z_penalty) * 2, 2)**2
             self.penalties_obj['extra_v_penalty_1'] = round(abs(velo_z_penalty) * 2, 2)**2
-            self.penalties_obj['extra_reward_1'] = reward
+            # self.penalties_obj['extra_reward_1'] = reward
             if distance < self.base_distance * 0.1:
-                reward += base_reward**2
-                penalties += abs(velo_z_penalty) * 2
-                self.penalties_obj['extra_reward_2'] = reward
+                # reward += base_reward**2
+                penalties += round(abs(velo_z_penalty) * 2, 2)**2
+                # self.penalties_obj['extra_reward_2'] = reward
                 self.penalties_obj['extra_v_penalty_2'] = round(abs(velo_z_penalty) * 2, 2)**2
 
         factored_penalties = penalties * 0.01 # factoring penalties
