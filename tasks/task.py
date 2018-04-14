@@ -51,12 +51,12 @@ class Task():
         for _ in range(self.action_repeat):
             done = self.sim.next_timestep(rotor_speeds) # update the sim pose and velocities
             reward += self.get_reward()
-            state = self.current_state()
-            pose_all.append(self.current_state())
+            state = self.extended_state()
+            pose_all.append(self.extended_state())
         next_state = np.concatenate(pose_all)
         return next_state, reward, done
 
-    def current_state(self):
+    def extended_state(self):
         """The state contains information about current position, velocity and angular velocity"""
         state = np.concatenate([np.array(self.sim.pose), np.array(self.sim.v), np.array(self.sim.angular_v)])
         return state
@@ -64,5 +64,5 @@ class Task():
     def reset(self):
         """Reset the sim to start a new episode."""
         self.sim.reset()
-        state = np.concatenate([self.current_state()] * self.action_repeat)
+        state = np.concatenate([self.extended_state()] * self.action_repeat)
         return state

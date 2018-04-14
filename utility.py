@@ -239,6 +239,10 @@ def evaluate_episode(agent, scores, task_name):
     label = "rewards_" + task_name
 
     plt.plot(scores, label=label)
+    plt.title('Score vs. episodes')
+    plt.xlabel('No. Episodes')
+    plt.ylabel('Score')
+    plt.legend()
     plt.show()
     results = log_run(agent, file_name)
     plot_z_n_reward(results)
@@ -285,3 +289,106 @@ def evaluate_episode(agent, scores, task_name):
 #                     hovering_agent.noise.sigma = 0.0001
 #             break
 #     sys.stdout.flush()
+
+
+# #todo refactor Hyperparameter testing
+# IMPORT
+# %load_ext autoreload
+# %autoreload 2
+#
+# import autoreload
+# import sys, csv, time, random
+# import numpy as np
+# import pandas as pd
+# import matplotlib.pyplot as plt
+#
+# %matplotlib notebook
+#
+# from agents.ddpg_agent import DDPG
+# from agents.ounoise import OUNoise
+# from agents.replay_buffer import ReplayBuffer
+# from tasks.task import Task
+# from tasks.takeoff import Takeoff
+# import utility
+#
+# num_episodes = 5 #150 #1000
+#
+# # Modify the values below to give the quadcopter a different starting position.
+# runtime = 5.                                     # time limit of the episode
+# init_pose = np.array([0., 0., 0., 0., 0., 0.])   # initial pose
+# init_velocities = np.array([0., 0., 0.])         # initial velocities
+# init_angle_velocities = np.array([0., 0., 0.])   # initial angle velocities
+# file_output = 'ddpg_example_data.txt'            # file name for saved results
+#
+# target_pos = np.array([0., 0., 100.])
+#
+# task = Task(init_pose=init_pose, target_pos=target_pos)
+# print("action-size: ",task.action_size)
+# print("state-size: ",task.state_size)
+# agent = DDPG(task)
+#
+# # Noise process
+# mu = 0.0
+# theta = 0.05
+# sigma = 0.01
+# agent.noise = OUNoise(agent.action_size, mu, theta, sigma)
+#
+# # Replay memory
+# buffer_size = 100000
+# batch_size = 128
+# agent.batch_size = batch_size
+# agent.buffer_size = buffer_size
+# agent.memory = ReplayBuffer(buffer_size, batch_size)
+#
+# # Algorithm parameters
+# agent.gamma = 0.99  # discount factor
+# agent.tau = 0.01  # for soft update of target parameters
+#
+# # Output file logging
+# labels = ['episode',  'x', 'y', 'z', 'score', 'action']
+# results = {x : [] for x in labels}
+#
+# #general config
+# display_graph = True
+# display_freq = 1
+#
+# %matplotlib notebook
+#
+# fig1, fig2, sub1, sub2 = utility.createPlot(num_episodes)
+# xs, ys1, ys2 = [], [], []
+#
+# # Run the simulation, and save the results.
+# with open(file_output, 'w') as csvfile:
+#     writer = csv.writer(csvfile)
+#     writer.writerow(labels)
+#     for i_episode in range(1, num_episodes+1):
+#         state = agent.reset_episode() # start a new episode
+#         while True:
+#             action = agent.act(state)
+#             next_state, reward, done = task.step(action)
+#             #print('z={:3.2f}, v_z={:3.2f}, reward={:3.2f}'.format(task.sim.pose[2], task.sim.v[2], reward))
+#             agent.step(action, reward, next_state, done)
+#             state = next_state
+#
+#             if done:
+#                 # Write episode stats
+#                 to_write = [i_episode] + list(task.sim.pose[:3]) + [reward] + [action]
+#                 for ii in range(len(labels)):
+#                     results[labels[ii]].append(to_write[ii])
+#                 writer.writerow(to_write)
+#
+#                 print("\rEpisode = {:4d}, sim.v[2] = {:7.3f}, reward = {:7.3f}, action = {}, z={:3.3f}".format(
+#                     i_episode, task.sim.v[2], reward, action, task.sim.pose[2]), end="")  # [debug]
+#
+#                 if (i_episode % display_freq == 0) and display_graph:
+#                     xs.append(i_episode)
+#                     ys1.append(reward)
+#                     ys2.append(task.sim.pose[2])
+#                     utility.plt_dynamic(fig1, fig2, xs, ys1, sub1, ys2, sub2)
+#                 break
+#         sys.stdout.flush()
+#         utility.plt_dynamic(fig1, fig2, xs, ys1, sub1, ys2, sub2)
+#
+# ## NB: THERE ARE TWO PLOTS BELOW
+# # First: Plotting reward of the last step of every episode vs. i_episode
+# # Second: Plotting z-Position of the last step of every episode vs. i_episode

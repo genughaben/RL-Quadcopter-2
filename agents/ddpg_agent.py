@@ -16,12 +16,12 @@ class DDPG():
         self.action_high = task.action_high
 
         # Actor (Policy) Model
-        self.actor_local = Actor(self.state_size, self.action_size, self.action_low, self.action_high)
-        self.actor_target = Actor(self.state_size, self.action_size, self.action_low, self.action_high)
+        self.actor_local = Actor(self.state_size, self.action_size, self.action_low, self.action_high, params=params)
+        self.actor_target = Actor(self.state_size, self.action_size, self.action_low, self.action_high, params=params)
 
         # Critic (Value) Model
-        self.critic_local = Critic(self.state_size, self.action_size)
-        self.critic_target = Critic(self.state_size, self.action_size)
+        self.critic_local = Critic(self.state_size, self.action_size, params)
+        self.critic_target = Critic(self.state_size, self.action_size, params)
 
         # Initialize target model parameters with local model parameters
         self.critic_target.model.set_weights(self.critic_local.model.get_weights())
@@ -39,6 +39,8 @@ class DDPG():
         # Replay memory
         self.buffer_size = 100000
         self.batch_size = 64
+        if(params.get("batch_size")):
+            self.batch_size = params.get("batch_size")
         self.memory = ReplayBuffer(self.buffer_size, self.batch_size)
 
         # Algorithm parameters

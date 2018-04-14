@@ -38,69 +38,69 @@ class Takeoff(Task):
 
     def get_reward(self):
         """Uses current pose of sim to return reward."""
+        # initialize
         reward = 0
         penalties = 0
-
-        # penalty for euler angles, we want the takeoff to be stable
-        # euler_penalty = 10 * abs(self.sim.pose[3:6]).sum()
-        # penalties += euler_penalty
-        #
-        # self.penalties_obj['euler'] = round(euler_penalty,2)
 
         # penalty for distance from target
         residual_distances = self.sim.pose[:3]-self.target_pos[:3]
         pos_x_penalty = abs(residual_distances[0])**2
         pos_y_penalty = abs(residual_distances[1])**2
-        pos_z_penalty = 10*abs(residual_distances[2])**2
-        pos_penalties = pos_x_penalty + pos_y_penalty + pos_z_penalty
-        penalties += pos_penalties
-
+        pos_z_penalty = abs(residual_distances[2])**2
         self.penalties_obj['pos_x'] = round(pos_x_penalty,2)
         self.penalties_obj['pos_y'] = round(pos_y_penalty,2)
         self.penalties_obj['pos_z'] = round(pos_z_penalty,2)
-        self.penalties_obj['pos'] = round(pos_penalties,2)
+
+        # penalty for euler angles, we want the takeoff to be stable
+        euler_penalty = abs(self.sim.pose[3:6]).sum()
+        self.penalties_obj['euler'] = round(euler_penalty,2)
 
         # distance to velocity relationship
         velo_x_penalty = abs(abs(residual_distances[0]) - abs(self.sim.v[0]))
         velo_y_penalty = abs(abs(residual_distances[1]) - abs(self.sim.v[1]))
-        velo_z_penalty = 10*abs(abs(residual_distances[2]) - abs(self.sim.v[2]))
-        velo_penalties = velo_x_penalty + velo_y_penalty + velo_z_penalty
-        penalties += velo_penalties
-
+        velo_z_penalty = abs(abs(residual_distances[2]) - abs(self.sim.v[2]))
         self.penalties_obj['v_x'] = round(velo_x_penalty, 2)
         self.penalties_obj['v_y'] = round(velo_y_penalty, 2)
         self.penalties_obj['v_z'] = round(velo_z_penalty, 2)
-        self.penalties_obj['velo'] = round(velo_penalties,2)
 
         #anguar velocity
         av_phi_penalties = abs(self.sim.pose[3] + self.sim.angular_v[0])**2
         av_theta_penalties = abs(self.sim.pose[4] + self.sim.angular_v[1])**2
-        av_psi_penalties = 10 * abs(self.sim.pose[5] + self.sim.angular_v[2])**2 # change to 5
-        angular_v_penalties = av_phi_penalties + av_theta_penalties + av_psi_penalties
-        penalties += angular_v_penalties
-
+        av_psi_penalties = abs(self.sim.pose[5] + self.sim.angular_v[2])**2 # change to 5
         self.penalties_obj['av_p'] = av_phi_penalties
         self.penalties_obj['av_t'] = av_theta_penalties
         self.penalties_obj['av_p'] = av_psi_penalties
-        self.penalties_obj['av_all'] = angular_v_penalties
 
-        distance = np.sqrt( (residual_distances**2).sum())
+        # factoring individual penalties
+        pos_penalties = pos_x_penalty + pos_y_penalty + 4 * pos_z_penalty
+        velo_penalties = velo_x_penalty + velo_y_penalty + 10 * velo_z_penalty
+        angular_v_penalties = av_phi_penalties + av_theta_penalties + 10 * av_psi_penalties
+        self.penalties_obj['pos'] = round(pos_penalties,2)
+        self.penalties_obj['velo'] = round(velo_penalties,2)
+        self.penalties_obj['av_all'] = round(angular_v_penalties,2)
+
+        # adding penalties
+        penalties += pos_penalties
+        penalties += 10 * euler_penalty
+        penalties += velo_penalties
+        penalties += angular_v_penalties
 
         # behaviour near target
+        distance = np.sqrt( (residual_distances**2).sum())
         if(self.sim.pose[2] >= self.target_pos[2]):
             # extra reward for flying near the target
-            reward += 100
+            reward += 5
+            penalties += pos_z_penalty * 2
             if distance < 5.:
-                reward += 100
+                reward += 5
 
         self.penalties_obj['all'] = round(penalties,2)
 
         #summary calculation
-        factored_penalties = penalties*0.05
-        # base reward
-        reward += 100
+        reward += 100 # base reward
+        factored_penalties = penalties*0.005 # factoring penalties
         reward = reward - factored_penalties
-
         self.penalties = factored_penalties
         self.reward = reward
+
         return reward
