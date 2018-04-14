@@ -4,7 +4,16 @@ import matplotlib.pyplot as plt
 import csv
 import sys
 
+
 def log_run(agent, file_name, given_labels = None):
+    """runs a task with an agent and saves coordinates, velocity and MDP state
+
+        Params
+        ======
+            agent (Agent)
+            file_name (str): filename where data is saved
+            given_labels (array): custom labels (optional)
+    """
     if(given_labels):
         labels = given_labels
     else:
@@ -37,15 +46,6 @@ def log_run(agent, file_name, given_labels = None):
         print("final_reward: ", reward)
     return results
 
-
-def load_log(file_path):
-    return pd.read_csv(file_path)
-
-
-def plot_log(file_path):
-    results = load_log(file_path)
-    plot_run(results)
-
 def normalize_angle(angles):
     # Adjust angles to range -pi to pi
     norm_angles = np.copy(angles)
@@ -56,6 +56,12 @@ def normalize_angle(angles):
 
 
 def plot_z_n_reward(results):
+    """plots a chart with z-pos vs. time and reward vs. time
+
+        Params
+        ======
+            results (obj) with results
+    """
     plt.plot(results['time'], results['z'], label='z-pos')
     plt.plot(results['time'], results['reward'], label='reward')
     plt.xlabel('time, seconds')
@@ -64,6 +70,18 @@ def plot_z_n_reward(results):
     _ = plt.ylim()
 
 def plot_run(results):
+    """plots 6 charts:
+        * pos vs. time
+        * velocity vs. time
+        * orientation vs. time
+        * angular velocity vs. time
+        * rotor_speeds vs. time
+        * reward vs. time
+
+        Params
+        ======
+            results (obj) data for plotting
+    """
     plt.subplots(figsize=(15, 15))
 
     plt.subplot(3, 3, 1)
@@ -115,14 +133,6 @@ def plot_run(results):
     plt.tight_layout()
     plt.show()
 
-# Plot runtime for reward and z-position over episodes
-def plt_dynamic(fig1, fig2, x, y1, sub1, y2, sub2, color_y1='g', color_y2='b'):
-    # fig, sub1 = plt.subplots(1,1)
-    sub1.plot(x, y1, color_y1)
-    sub2.plot(x, y2, color_y2)
-    fig1.canvas.draw()
-    fig2.canvas.draw()
-
 def createPlot(num_episodes, y_lims_reward=[-1000.,1000.]):
 # fig and sub1, sub2
     fig1, sub1 = plt.subplots(1,1)
@@ -146,6 +156,26 @@ def createPlot(num_episodes, y_lims_reward=[-1000.,1000.]):
 
     plt.legend()
     return fig1, fig2, sub1, sub2
+
+# Plot runtime for reward and z-position over episodes
+def plt_dynamic(fig1, fig2, x, y1, sub1, y2, sub2, color_y1='g', color_y2='b'):
+    """plots 6 charts:
+        * pos vs. time
+        * velocity vs. time
+        * orientation vs. time
+        * angular velocity vs. time
+        * rotor_speeds vs. time
+        * reward vs. time
+
+        Params
+        ======
+            results (obj) data for plotting
+    """
+    sub1.plot(x, y1, color_y1)
+    sub2.plot(x, y2, color_y2)
+    fig1.canvas.draw()
+    fig2.canvas.draw()
+
 
 def print_3d_trajectory(results):
     import matplotlib as mpl
@@ -193,7 +223,7 @@ def train(agent, task, num_episodes, display_every=1, display_graphs=True, y_lim
                         end="")  # [debug]
                     if(  task.penalties_obj ):
                         penalty_string = "  ".join([k+": "+str(v) for k,v in task.penalties_obj.items()])
-                        print("\n", penalty_string)
+                        print("\npenalties: ", penalty_string)
                 if (i_episode % display_every == 0):
                     xs.append(i_episode)
                     ys1.append(agent.score)
